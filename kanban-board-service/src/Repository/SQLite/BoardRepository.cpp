@@ -61,7 +61,7 @@ void BoardRepository::initialize() {
     handleSQLError(result, errorMessage);
 
     // only if dummy data is needed ;)
-    //createDummyData();
+    // createDummyData();
 }
 
 Board BoardRepository::getBoard() {
@@ -77,7 +77,12 @@ std::optional<Column> BoardRepository::getColumn(int id) {
 }
 
 std::optional<Column> BoardRepository::postColumn(std::string name, int position) {
-    throw NotImplementedException();
+    std::vector<Column> columns = getColumns();
+    int id = 0;
+    for (int i = 0; i < columns.size(); i++)
+        id++;
+    Column c(id, name, position);
+    return c;
 }
 
 std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std::string name, int position) {
@@ -97,7 +102,16 @@ std::optional<Item> BoardRepository::getItem(int columnId, int itemId) {
 }
 
 std::optional<Item> BoardRepository::postItem(int columnId, std::string title, int position) {
-    throw NotImplementedException();
+    std::vector<Item> items = getItems(columnId);
+    int id = 0;
+    for (int i = 0; i < items.size(); i++)
+        id++;
+    auto t = std::time(NULL);
+    auto timestamp = *std::localtime(&t);
+    std::ostringstream stream;
+    stream << std::put_time(&timestamp, "%d-%m-%Y %H-%M-%S");
+    Item i(id, title, position, stream.str());
+    return i;
 }
 
 std::optional<Prog3::Core::Model::Item> BoardRepository::putItem(int columnId, int itemId, std::string title, int position) {

@@ -28,5 +28,15 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.nosetestsEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "cmake.generator": "MinGW Makefiles",
+  "cmake.cmakePath": "C:/msys64/mingw64/bin/cmake.exe",
+  "cmake.mingwSearchDirs": [
+    "C:/msys64/mingw64",
+  ],
+  "cmake.preferredGenerators": [
+    "MinGW Makefiles"
+  ],
+  "cmake.configureOnOpen": true,
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
 }
