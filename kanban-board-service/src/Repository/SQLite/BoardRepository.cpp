@@ -95,6 +95,13 @@ std::optional<Column> BoardRepository::postColumn(std::string name, int position
     }
 
     return std::nullopt;
+
+    std::vector<Column> columns = getColumns();
+    int id = 0;
+    for (int i = 0; i < columns.size(); i++)
+        id++;
+    Column c(id, name, position);
+    return c;
 }
 
 std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std::string name, int position) {
@@ -144,6 +151,17 @@ std::optional<Item> BoardRepository::postItem(int columnId, std::string title, i
         return Item(itemId, title, position, datetime);
     }
     return std::nullopt;
+
+    std::vector<Item> items = getItems(columnId);
+    int id = 0;
+    for (int i = 0; i < items.size(); i++)
+        id++;
+    auto t = std::time(NULL);
+    auto timestamp = *std::localtime(&t);
+    std::ostringstream stream;
+    stream << std::put_time(&timestamp, "%d-%m-%Y %H-%M-%S");
+    Item i(id, title, position, stream.str());
+    return i;
 }
 
 std::optional<Prog3::Core::Model::Item> BoardRepository::putItem(int columnId, int itemId, std::string title, int position) {
