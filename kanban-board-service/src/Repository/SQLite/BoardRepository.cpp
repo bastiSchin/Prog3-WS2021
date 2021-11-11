@@ -121,6 +121,7 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
     if (SQLITE_OK == result) {
         int columnId = sqlite3_last_insert_rowid(database);
         return Column(columnId, name, position);
+        // return Column(id, name, position);
     }
 
     return std::nullopt;
@@ -168,22 +169,31 @@ std::optional<Item> BoardRepository::postItem(int columnId, std::string title, i
         return Item(itemId, title, position, datetime);
     }
     return std::nullopt;
-
-    std::vector<Item> items = getItems(columnId);
-    int id = 0;
-    for (int i = 0; i < items.size(); i++)
-        id++;
-    auto t = std::time(NULL);
-    auto timestamp = *std::localtime(&t);
-    std::ostringstream stream;
-    stream << std::put_time(&timestamp, "%d-%m-%Y %H-%M-%S");
-    Item i(id, title, position, stream.str());
-    return i;
 }
 
 std::optional<Prog3::Core::Model::Item> BoardRepository::putItem(int columnId, int itemId, std::string title, int position) {
     string sqlPutItem =
-        "";
+        "UPDATE item SET position = " +
+        to_string(position) +
+        ", title = " + title +
+        " WHERE column_id = " + to_string(columnId) +
+        "AND id = " + to_string(itemId);
+
+    int result = 0;
+    char *errorMessage = nullptr;
+
+    result = sqlite3_exec(database, sqlPutItem.c_str(), NULL, 0, &errorMessage);
+    handleSQLError(result, errorMessage);
+
+    if (SQLITE_OK == result) {
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+        return Item(itemId, title, position, oss.str());
+    }
+    return std::nullopt;
 }
 
 void BoardRepository::deleteItem(int columnId, int itemId) {
