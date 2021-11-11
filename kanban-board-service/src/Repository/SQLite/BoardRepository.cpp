@@ -119,8 +119,7 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
     handleSQLError(result, errorMessage);
 
     if (SQLITE_OK == result) {
-        int columnId = sqlite3_last_insert_rowid(database);
-        return Column(columnId, name, position);
+        return Column(id, name, position);
     }
 
     return std::nullopt;
