@@ -78,7 +78,7 @@ std::optional<Column> BoardRepository::getColumn(int id) {
 }
 
 std::optional<Column> BoardRepository::postColumn(std::string name, int position) {
-    string sqlPostItem =
+    string sqlPostColumn =
         "INSERT INTO column('name', 'position') "
         "VALUES('" +
         name + "', '" + to_string(position) + "')";
@@ -86,7 +86,7 @@ std::optional<Column> BoardRepository::postColumn(std::string name, int position
     int result = 0;
     char *errorMessage = nullptr;
 
-    result = sqlite3_exec(database, sqlPostItem.c_str(), NULL, 0, &errorMessage);
+    result = sqlite3_exec(database, sqlPostColumn.c_str(), NULL, 0, &errorMessage);
     handleSQLError(result, errorMessage);
 
     if (SQLITE_OK == result) {
@@ -105,7 +105,25 @@ std::optional<Column> BoardRepository::postColumn(std::string name, int position
 }
 
 std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std::string name, int position) {
-    throw NotImplementedException();
+    string sqlPutColumn =
+        "UPDATE column "
+        "SET position = " +
+        to_string(position) +
+        ", name = " + name +
+        " WHERE id = " + to_string(id) + ";";
+
+    int result = 0;
+    char *errorMessage = nullptr;
+
+    result = sqlite3_exec(database, sqlPutColumn.c_str(), NULL, 0, &errorMessage);
+    handleSQLError(result, errorMessage);
+
+    if (SQLITE_OK == result) {
+        int columnId = sqlite3_last_insert_rowid(database);
+        return Column(columnId, name, position);
+    }
+
+    return std::nullopt;
 }
 
 void BoardRepository::deleteColumn(int id) {
@@ -164,7 +182,8 @@ std::optional<Item> BoardRepository::postItem(int columnId, std::string title, i
 }
 
 std::optional<Prog3::Core::Model::Item> BoardRepository::putItem(int columnId, int itemId, std::string title, int position) {
-    throw NotImplementedException();
+    string sqlPutItem =
+        "";
 }
 
 void BoardRepository::deleteItem(int columnId, int itemId) {
