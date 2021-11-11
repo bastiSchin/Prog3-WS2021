@@ -110,7 +110,7 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
 
 void BoardRepository::deleteColumn(int id) {
     string sqlDeleteColumn =
-        "DELETE FROM column"
+        "DELETE FROM column" +
         "WHERE id = " +
         to_string(id);
 
