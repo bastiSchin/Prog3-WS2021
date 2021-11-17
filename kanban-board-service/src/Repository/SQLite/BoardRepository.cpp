@@ -126,9 +126,9 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
     void *selectResult = static_cast<void *>(&emptyString);
     void *thisColumn = static_cast<void *>(&emptyStringThisColumn);
 
-    string sqlSelectItems = "SELECT * from item WHERE column_id=" + to_string(id) + ";";
-    string sqlPutColumn = "UPDATE column SET name= \"" + name + "\", position = " + to_string(position) + " WHERE id = " + to_string(id) + ";";
-    string sqlSelectColumn = "SELECT * from column WHERE id=" + to_string(id) + ";";
+    string sqlSelectItems = "SELECT * from item WHERE column_id=" + to_string(id);
+    string sqlPutColumn = "UPDATE column SET name= \"" + name + "\", position = " + to_string(position) + " WHERE id = " + to_string(id);
+    string sqlSelectColumn = "SELECT * from column WHERE id=" + to_string(id);
 
     // CHECK IF COLUMN EXISTS
     result = sqlite3_exec(database, sqlSelectColumn.c_str(), BoardRepository::queryCallback, thisColumn, &errorMessage);
@@ -157,7 +157,6 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
         string positionString = split(tuples[3], ':')[1];
         int position = stoi(positionString);
 
-        // cout << "Id: " + to_string(itemId) + " title: " + title + " position: " + to_string(position) + " datetime: " + datetime << endl;
         realItems.push_back(Item(itemId, title, position, datetime));
     }
     // UPDATE COLUMN
@@ -166,10 +165,8 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
     handleSQLError(result, errorMessage);
 
     if (SQLITE_OK != result) {
-        cout << "Could not edit column with id " + to_string(id) + "." << endl;
         return nullopt;
     }
-    cout << "Column with id " + to_string(id) + " sucessfully edited" << endl;
     Column column(id, name, position);
     for (auto item : realItems) {
         column.addItem(item);
