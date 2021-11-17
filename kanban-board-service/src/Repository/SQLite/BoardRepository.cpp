@@ -64,7 +64,6 @@ void BoardRepository::initialize() {
     // only if dummy data is needed ;)
     // createDummyData();
 }
-
 template <typename Out>
 void split(const std::string &s, char delim, Out result) {
     std::istringstream iss(s);
@@ -93,7 +92,7 @@ std::optional<Column> BoardRepository::getColumn(int id) {
 }
 
 std::optional<Column> BoardRepository::postColumn(std::string name, int position) {
-    string sqlPostItem =
+    string sqlPostColumn =
         "INSERT INTO column('name', 'position') "
         "VALUES('" +
         name + "', '" + to_string(position) + "')";
@@ -101,7 +100,7 @@ std::optional<Column> BoardRepository::postColumn(std::string name, int position
     int result = 0;
     char *errorMessage = nullptr;
 
-    result = sqlite3_exec(database, sqlPostItem.c_str(), NULL, 0, &errorMessage);
+    result = sqlite3_exec(database, sqlPostColumn.c_str(), NULL, 0, &errorMessage);
     handleSQLError(result, errorMessage);
 
     if (SQLITE_OK == result) {
@@ -110,6 +109,13 @@ std::optional<Column> BoardRepository::postColumn(std::string name, int position
     }
 
     return std::nullopt;
+
+    std::vector<Column> columns = getColumns();
+    int id = 0;
+    for (int i = 0; i < columns.size(); i++)
+        id++;
+    Column c(id, name, position);
+    return c;
 }
 
 std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std::string name, int position) {
@@ -172,30 +178,19 @@ std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std
 }
 
 void BoardRepository::deleteColumn(int id) {
+    string sqlDeleteColumn =
+        "DELETE FROM column WHERE id =" +
+        to_string(id);
+
     int result = 0;
     char *errorMessage = nullptr;
-
-    string sqlDeleteColumn =
-        "delete from column "
-        "where id = " +
-        std::to_string(id);
 
     result = sqlite3_exec(database, sqlDeleteColumn.c_str(), NULL, 0, &errorMessage);
     handleSQLError(result, errorMessage);
 }
 
-void BoardRepository::deleteItem(int columnId, int itemId) {
-    int result = 0;
-    char *errorMessage = nullptr;
-
-    string sqlDeleteItem =
-        "delete from item "
-        "where id = " +
-        std::to_string(itemId) +
-        " and column_id = " + std::to_string(columnId);
-
-    result = sqlite3_exec(database, sqlDeleteItem.c_str(), NULL, 0, &errorMessage);
-    handleSQLError(result, errorMessage);
+std::vector<Item> BoardRepository::getItems(int columnId) {
+    throw NotImplementedException();
 }
 
 std::optional<Item> BoardRepository::getItem(int columnId, int itemId) {
@@ -260,7 +255,17 @@ std::optional<Prog3::Core::Model::Item> BoardRepository::putItem(int columnId, i
 }
 
 void BoardRepository::deleteItem(int columnId, int itemId) {
-    throw NotImplementedException();
+    string sqlDeleteItem =
+        "DELETE FROM item WHERE id = " +
+        to_string(itemId) +
+        " AND column_id = " +
+        to_string(columnId);
+
+    int result = 0;
+    char *errorMessage = nullptr;
+
+    result = sqlite3_exec(database, sqlDeleteItem.c_str(), NULL, 0, &errorMessage);
+    handleSQLError(result, errorMessage);
 }
 
 void BoardRepository::handleSQLError(int statementResult, char *errorMessage) {
@@ -306,12 +311,12 @@ void BoardRepository::createDummyData() {
 */
 int BoardRepository::queryCallback(void *data, int numberOfColumns, char **fieldValues, char **columnNames) {
     string *stringPointer = static_cast<string *>(data);
-    int size = sizeof(columnNames) / sizeof(columnNames[0]);
     for (int i = 0; i < numberOfColumns; i++) {
         *stringPointer = *stringPointer + columnNames[i] + ":" + fieldValues[i];
         if (i < numberOfColumns - 1)
-            *stringPointer = *stringPointer + ",";
+            *stringPointer = *stringPointer + ":";
     }
+
     *stringPointer = *stringPointer + ";";
     return 0;
 }
