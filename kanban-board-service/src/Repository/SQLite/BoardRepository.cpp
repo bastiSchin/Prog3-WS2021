@@ -183,7 +183,9 @@ void BoardRepository::deleteColumn(int id) {
     char *errorMessage = nullptr;
 
     result = sqlite3_exec(database, sqlDeleteColumn.c_str(), NULL, 0, &errorMessage);
-    handleSQLError(result, errorMessage);
+
+    if (SQLITE_OK == result) {
+    }
 }
 
 std::vector<Item> BoardRepository::getItems(int columnId) {
@@ -191,7 +193,28 @@ std::vector<Item> BoardRepository::getItems(int columnId) {
 }
 
 std::optional<Item> BoardRepository::getItem(int columnId, int itemId) {
-    throw NotImplementedException();
+    string sqlSelectItem = "SELECT * FROM Item WHERE column_id = " + to_string(columnId) + " AND id = " + to_string(itemId);
+
+    int result;
+    char *errorMessage = nullptr;
+
+    string item;
+
+    result = sqlite3_exec(database, sqlSelectItem.c_str(), BoardRepository::queryCallback, &item, &errorMessage);
+    handleSQLError(result, errorMessage);
+
+    string data = item;
+    vector itemVec = split(data, ';');
+
+    int id = stoi(itemVec[0]);
+    string title = itemVec[1];
+    int position = stoi(itemVec[2]);
+
+    time_t now = time(0);
+    char *datetime = ctime(&now);
+
+    if (SQLITE_OK == result)
+        return Item(id, title, position, datetime);
 }
 
 std::optional<Item> BoardRepository::postItem(int columnId, std::string title, int position) {
