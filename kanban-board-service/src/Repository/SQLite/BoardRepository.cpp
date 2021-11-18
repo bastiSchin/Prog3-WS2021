@@ -84,11 +84,36 @@ Board BoardRepository::getBoard() {
 }
 
 std::vector<Column> BoardRepository::getColumns() {
-    throw NotImplementedException();
+    vector<Column> columns;
+    optional<Column> column;
+
+    for (int i = 0; true; i++) {
+        column = getColumn(i);
+        if (!column.has_value())
+            break;
+
+        columns.push_back(column.value());
+    }
+
+    return columns;
 }
 
 std::optional<Column> BoardRepository::getColumn(int id) {
-    throw NotImplementedException();
+    string sqlSelectColumn = "SELECT * FROM column WHERE id = " + to_string(id);
+
+    int result = 0;
+    char *errorMessage = nullptr;
+
+    string column = "";
+
+    result = sqlite3_exec(database, sqlSelectColumn.c_str(), BoardRepository::queryCallback, &column, &errorMessage);
+
+    vector stringColumn = split(column, ';');
+
+    if (SQLITE_OK != result)
+        return nullopt;
+
+    return Column(stoi(stringColumn[0]), stringColumn[1], stoi(stringColumn[2]));
 }
 
 std::optional<Column> BoardRepository::postColumn(std::string name, int position) {
@@ -109,13 +134,6 @@ std::optional<Column> BoardRepository::postColumn(std::string name, int position
     }
 
     return std::nullopt;
-
-    std::vector<Column> columns = getColumns();
-    int id = 0;
-    for (int i = 0; i < columns.size(); i++)
-        id++;
-    Column c(id, name, position);
-    return c;
 }
 
 std::optional<Prog3::Core::Model::Column> BoardRepository::putColumn(int id, std::string name, int position) {
@@ -189,7 +207,18 @@ void BoardRepository::deleteColumn(int id) {
 }
 
 std::vector<Item> BoardRepository::getItems(int columnId) {
-    throw NotImplementedException();
+
+    vector<Item> items;
+    optional<Item> item;
+
+    for (int i = 0; true; i++) {
+        item = getItem(columnId, i);
+        if (!item.has_value())
+            break;
+
+        items.push_back(item.value());
+    }
+    return items;
 }
 
 std::optional<Item> BoardRepository::getItem(int columnId, int itemId) {
@@ -215,6 +244,8 @@ std::optional<Item> BoardRepository::getItem(int columnId, int itemId) {
 
     if (SQLITE_OK == result)
         return Item(id, title, position, datetime);
+
+    return nullopt;
 }
 
 std::optional<Item> BoardRepository::postItem(int columnId, std::string title, int position) {
