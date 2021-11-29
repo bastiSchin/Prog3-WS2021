@@ -19,7 +19,11 @@ class BoardRepository : public RepositoryIf {
         return id != INVALID_ID;
     }
 
+    int BoardRepository::queryCallbackColumn(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
     static int queryCallback(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
+    int BoardRepository::queryCallbackItem(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
+    int BoardRepository::queryCallbackAllItems(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
+    int BoardRepository::queryCallbackAllColumns(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
 
   public:
     BoardRepository();

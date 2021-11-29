@@ -104,16 +104,14 @@ std::optional<Column> BoardRepository::getColumn(int id) {
     int result = 0;
     char *errorMessage = nullptr;
 
-    string column = "";
+    Column column(-1, "", 0);
 
-    result = sqlite3_exec(database, sqlSelectColumn.c_str(), BoardRepository::queryCallback, &column, &errorMessage);
+    result = sqlite3_exec(database, sqlSelectColumn.c_str(), BoardRepository::queryCallbackColumn, &column, &errorMessage);
 
-    vector stringColumn = split(column, ';');
+    if (column.getId() != -1)
+        return column;
 
-    if (SQLITE_OK != result)
-        return nullopt;
-
-    return Column(stoi(stringColumn[0]), stringColumn[1], stoi(stringColumn[2]));
+    return nullopt;
 }
 
 std::optional<Column> BoardRepository::postColumn(std::string name, int position) {
@@ -211,13 +209,11 @@ std::vector<Item> BoardRepository::getItems(int columnId) {
     vector<Item> items;
     optional<Item> item;
 
-    for (int i = 0; true; i++) {
-        item = getItem(columnId, i);
-        if (!item.has_value())
-            break;
+    string sqlGetItems = "SELECT * FROM items WHERE column_id = " + to_string(columnId);
+    int result;
+    char *errorMessage = nullptr;
+    result = sqlite3_exec(database, sqlGetItems.c_str(), BoardRepository::queryCallbackAllItems, &items, &errorMessage);
 
-        items.push_back(item.value());
-    }
     return items;
 }
 
@@ -227,23 +223,13 @@ std::optional<Item> BoardRepository::getItem(int columnId, int itemId) {
     int result;
     char *errorMessage = nullptr;
 
-    string item;
+    Item item(-1, "", -1, "");
 
-    result = sqlite3_exec(database, sqlSelectItem.c_str(), BoardRepository::queryCallback, &item, &errorMessage);
+    result = sqlite3_exec(database, sqlSelectItem.c_str(), BoardRepository::queryCallbackItem, &item, &errorMessage);
     handleSQLError(result, errorMessage);
 
-    string data = item;
-    vector itemVec = split(data, ';');
-
-    int id = stoi(itemVec[0]);
-    string title = itemVec[1];
-    int position = stoi(itemVec[2]);
-
-    time_t now = time(0);
-    char *datetime = ctime(&now);
-
-    if (SQLITE_OK == result)
-        return Item(id, title, position, datetime);
+    if (SQLITE_OK == result && item.getId() != -1)
+        return item;
 
     return nullopt;
 }
@@ -360,6 +346,48 @@ void BoardRepository::createDummyData() {
   sqlite3_exec takes a "Callback function" as one of its arguments, and since there are many crazy approaches in the wild internet,
   I want to show you how the signature of this "callback function" may look like in order to work with sqlite3_exec()
 */
+
+int BoardRepository::queryCallbackColumn(void *data, int numberOfColumns, char **fieldValues, char **columnNames) {
+    Column *column = static_cast<Column *>(data);
+
+    column->setID(stoi(fieldValues[0]));
+    column->setName(fieldValues[1]);
+    column->setPos(stoi(fieldValues[2]));
+
+    return 0;
+}
+
+int BoardRepository::queryCallbackItem(void *data, int numberOfColumns, char **fieldValues, char **columnNames) {
+    Item *item = static_cast<Item *>(data);
+
+    item->setID(stoi(fieldValues[0]));
+    item->setTitle(fieldValues[1]);
+    item->setPos(stoi(fieldValues[2]));
+    item->setTimestamp(fieldValues[3]);
+
+    return 0;
+}
+
+int BoardRepository::queryCallbackAllColumns(void *data, int numberOfColumns, char **fieldValues, char **columnNames) {
+    vector<Column> *columns = static_cast<vector<Column> *>(data);
+
+    Column c(stoi(fieldValues[0]), fieldValues[1], stoi(fieldValues[2]));
+
+    columns->push_back(c);
+
+    return 0;
+}
+
+int BoardRepository::queryCallbackAllItems(void *data, int numberOfColumns, char **fieldValues, char **columnNames) {
+    vector<Item> *items = static_cast<vector<Item> *>(data);
+
+    Item i(stoi(fieldValues[0]), fieldValues[1], stoi(fieldValues[2]), fieldValues[3]);
+
+    items->push_back(i);
+
+    return 0;
+}
+
 int BoardRepository::queryCallback(void *data, int numberOfColumns, char **fieldValues, char **columnNames) {
     string *stringPointer = static_cast<string *>(data);
     for (int i = 0; i < numberOfColumns; i++) {
