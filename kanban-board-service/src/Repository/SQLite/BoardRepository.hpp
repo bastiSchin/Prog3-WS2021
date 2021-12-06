@@ -18,8 +18,8 @@ class BoardRepository : public RepositoryIf {
     static bool isValid(int id) {
         return id != INVALID_ID;
     }
-    static int BoardRepository::queryCallbackAllItems(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
-    static int BoardRepository::queryCallbackAllColumns(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
+    static int queryCallbackAllItems(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
+    static int queryCallbackAllColumns(void *data, int numberOfColumns, char **fieldValues, char **columnNames);
 
   public:
     BoardRepository();
